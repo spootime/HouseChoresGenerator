@@ -1,13 +1,38 @@
 var express = require('express');
 var router = express.Router();
 var UserModel = require('../models/userModel');
+var ChoresModel = require('../models/ChoresModel');
 var mid = require('./authChecker.js')
 
-router.use('/generator', require('./generator.js'));
+function addChores(id) {
+    var choresData = [
+            {
+                name: 'Take out the trash',
+                description: "",
+                priority: 3,
+                difficulty: 1,
+                frequency: null,
+                _user: id
+            }, 
+            {
+                name: 'Wash the car',
+                description: "",
+                priority: 1,
+                difficulty: 5,
+                frequency: null,
+                _user: id
+            }
+        ];
 
-router.get('/', function(req, res) {
+        ChoresModel.create(choresData, function(err, chores) {
+           if (err) {
+               return next(err);
+           } 
+        });
+}
+
+router.get('/', mid.authChecker, function(req, res) {
     res.render('home');
-//    res.render('generator');
 });
 
 // GET - Register 
@@ -44,7 +69,8 @@ router.post('/register', function(req, res, next) {
                return next(err);
            } else {
                req.session.userId = user._id;
-               console.log(req.session.userId + '\n');
+               addChores(user._id);
+               
                return res.redirect('/generator');
            }
         });
@@ -93,5 +119,10 @@ router.get('/logout', function(req, res, next){
         });
     }
 });
+
+router.use('/chores', require('./chores.js'));
+router.use('/household', require('./household.js'));
+router.use('/generator', require('./generator.js'));
+router.use('/schedule', require('./schedule.js'));
 
 module.exports = router;
